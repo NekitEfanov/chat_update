@@ -9,6 +9,7 @@
 #include <QFileInfo>
 #include <QFile>
 #include <QString>
+#include <QDataStream>
 
 class update : public QObject
 {
@@ -21,9 +22,15 @@ public:
     QTcpSocket * socket;
     QByteArray DataSocket = "";
     QFile file_exe = "Qt5Client.exe";
+    QDataStream *out;
+
+    QString dest_size = "";
+
+    QString size = 0;
 public slots:
     void connectSuccess();
     void sockDisc();
+    void sockReady();
 };
 
 #endif // UPDATE_H

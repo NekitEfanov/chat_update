@@ -1,6 +1,13 @@
 #include "update.h"
 
-update::update(){}
+#include <thread>
+#include <chrono>
+
+using namespace std::chrono;
+
+update::update(){
+
+}
 
 
 void update::start_update()
@@ -18,41 +25,47 @@ void update::start_update()
         ip_file.close();
         //////////////////////////////////////////
         socket = new QTcpSocket(this);
-            connect(socket, SIGNAL(connected()), this, SLOT(connectSuccess()));
-            connect(socket, SIGNAL(disconnected()), this, SLOT(sockDisc()));               //initialization signal socket
+        connect(socket, SIGNAL(connected()), this, SLOT(connectSuccess()));
+        connect(socket, SIGNAL(disconnected()), this, SLOT(sockDisc()));                //initialization signal socket
+        connect(socket, SIGNAL(readyRead()), this, SLOT(sockReady()));                 
         socket->connectToHost(ip_server, 60111);
         //////////////////////////////////////////
 }
 void update::connectSuccess()
 {
-      socket->write(Key_update);
-      if (!(socket->waitForReadyRead(5000)))
-      {
-          qDebug() << "Update error";
-          socket->deleteLater();
-      }
-      else
-      {
-          qDebug() << "Status - connected" << endl;
-          qDebug() << "Update started..." << endl;
-              DataSocket += socket->readAll();     
-          qDebug() << "installation..." << endl;
-          if (!file_exe.open(QIODevice::WriteOnly | QIODevice::Truncate))
-          {
-              qDebug() << "Error open file_exe";
-              socket->deleteLater();
-          }
-          else
-          {
-              QTextStream out(&file_exe);
-              out << DataSocket;
-              file_exe.close();
-          }
-      }
+    if (!file_exe.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        qDebug() << "Error open file_exe";
+        socket->deleteLater();
+    }
+    out = new QDataStream(&file_exe);
+
+    socket->write(Key_update);
+    dest_size.clear();
+    socket-> waitForReadyRead();
+    dest_size = socket->readAll();
+    socket->write("ready");
+    connect(socket, SIGNAL(readyRead()), this, SLOT(sockReady()));
 }
 
+void update::sockReady() {
+    qDebug() << "installation..." << endl;
+    DataSocket = socket->readAll();
+
+    size += DataSocket.size();
+    out->writeRawData(DataSocket.data(), DataSocket.size());
+
+    if (size.toInt() == dest_size.toInt())
+    {
+        socket->deleteLater();
+        file_exe.close();
+        delete out;
+    }
+}
 
 void update::sockDisc()
 {
      socket->deleteLater();
+     file_exe.close();
+     delete out;
 }
