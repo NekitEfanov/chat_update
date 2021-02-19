@@ -10,7 +10,7 @@
 #include <QFile>
 #include <QString>
 #include <QDataStream>
-
+#include <QProcess>
 class update : public QObject
 {
     Q_OBJECT
@@ -26,7 +26,7 @@ public:
 
     QString dest_size = "";
 
-    QString size = 0;
+    int size = 0;
 public slots:
     void connectSuccess();
     void sockDisc();

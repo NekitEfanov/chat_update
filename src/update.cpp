@@ -26,8 +26,7 @@ void update::start_update()
         //////////////////////////////////////////
         socket = new QTcpSocket(this);
         connect(socket, SIGNAL(connected()), this, SLOT(connectSuccess()));
-        connect(socket, SIGNAL(disconnected()), this, SLOT(sockDisc()));                //initialization signal socket
-        connect(socket, SIGNAL(readyRead()), this, SLOT(sockReady()));                 
+        connect(socket, SIGNAL(disconnected()), this, SLOT(sockDisc()));                //initialization signal socket               
         socket->connectToHost(ip_server, 60111);
         //////////////////////////////////////////
 }
@@ -49,17 +48,21 @@ void update::connectSuccess()
 }
 
 void update::sockReady() {
+    socket->waitForReadyRead();
     qDebug() << "installation..." << endl;
     DataSocket = socket->readAll();
-
     size += DataSocket.size();
     out->writeRawData(DataSocket.data(), DataSocket.size());
-
-    if (size.toInt() == dest_size.toInt())
+    qDebug() << dest_size.toInt() << "     " << size << endl;
+    
+    if (dest_size.toInt() == size)
     {
-        socket->deleteLater();
-        file_exe.close();
-        delete out;
+        sockDisc();
+        qDebug() << "installation complete" << endl;
+        QString program = "Qt5Client.exe";
+        QProcess* myProcess = new QProcess(this);
+        myProcess->start(program);
+        exit(0);
     }
 }
 
@@ -67,5 +70,5 @@ void update::sockDisc()
 {
      socket->deleteLater();
      file_exe.close();
-     delete out;
+     
 }
