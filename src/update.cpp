@@ -43,26 +43,19 @@ void update::connectSuccess()
     dest_size.clear();
     socket-> waitForReadyRead();
     dest_size = socket->readAll();
-    socket->write("ready");
     connect(socket, SIGNAL(readyRead()), this, SLOT(sockReady()));
+    socket->write("ready");
 }
 
 void update::sockReady() {
-    socket->waitForReadyRead();
     qDebug() << "installation..." << endl;
     DataSocket = socket->readAll();
     size += DataSocket.size();
     out->writeRawData(DataSocket.data(), DataSocket.size());
     qDebug() << dest_size.toInt() << "     " << size << endl;
-    
     if (dest_size.toInt() == size)
     {
-        sockDisc();
-        qDebug() << "installation complete" << endl;
-        QString program = "Qt5Client.exe";
-        QProcess* myProcess = new QProcess(this);
-        myProcess->start(program);
-        exit(0);
+        socket->write("complete");
     }
 }
 
@@ -70,5 +63,5 @@ void update::sockDisc()
 {
      socket->deleteLater();
      file_exe.close();
-     
+     qDebug() << "installation complete" << endl;
 }
