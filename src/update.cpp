@@ -5,10 +5,7 @@
 
 using namespace std::chrono;
 
-update::update(){
-
-}
-
+update::update(){}
 
 void update::start_update()
 {
@@ -23,11 +20,14 @@ void update::start_update()
             ip_server = ip_file.readAll();
         }
         ip_file.close();
+
         //////////////////////////////////////////
+
         socket = new QTcpSocket(this);
         connect(socket, SIGNAL(connected()), this, SLOT(connectSuccess()));
         connect(socket, SIGNAL(disconnected()), this, SLOT(sockDisc()));                //initialization signal socket               
         socket->connectToHost(ip_server, 60111);
+
         //////////////////////////////////////////
 }
 void update::connectSuccess()
@@ -53,10 +53,10 @@ void update::sockReady() {
     size += DataSocket.size();
     out->writeRawData(DataSocket.data(), DataSocket.size());
     qDebug() << dest_size.toInt() << "     " << size << endl;
+
     if (dest_size.toInt() == size)
-    {
         socket->write("complete");
-    }
+
 }
 
 void update::sockDisc()
